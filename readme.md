@@ -1,11 +1,11 @@
 ## Mix Auth 
-This auth used to mix laravel sessions with api tokens, so you can use the same middleware to authenticate request if it has sessions or it support api token.
+This auth vendor used for laravel framework, to mix laravel sessions with api tokens, so you can use the same middleware and same routes to authenticate the request, if the request contains sessions cookie or it support an api token.
 
 #### Features
 * More secure than default token auth in laravel since it using hashes for tokens.
-* Support many tokens for the same device, so the devices will not share same token.
+* Support many tokens for the same account, so the devices will not share the same token.
 * Support sessions if it exist in the request and there is no token entered.
-* Support many ways to provide token throw url query, request body and request header.
+* Support many ways to provide token thought url query, request body and request header.
 * Support many guards.
 * More customizable since you can specify expire time, max step time between requests.
 
@@ -20,7 +20,7 @@ Require this package with composer.
 composer require bnabriss/mix-auth
 ```
 
-Laravel >5.5 uses Package Auto-Discovery, so does'nt require you to manually add the ServiceProvider. If you don't use auto-discovery, add the ServiceProvider to the providers array in `config/app.php` 
+Laravel >5.5 uses Package Auto-Discovery, so doesn't require you to manually add the ServiceProvider. If you don't use auto-discovery, add the ServiceProvider to the providers array in `config/app.php` 
 
 ```php
 Bnabriss\MixAuth\MixAuthProvider::class,
@@ -30,14 +30,14 @@ You can customize some settings of the vendor using `config/mix-auth.php` that y
 ```
 php artisan vendor:publish --provider="Bnabriss\MixAuth\MixAuthProvider"
 ```
-so we encourage you to read [config file](https://github.com/bnabriss/mix-auth/blob/master/config/debugbar.php) and learn more about customization
+so we encourage you to read [config file](https://github.com/bnabriss/mix-auth/blob/master/config/mix-auth.php) and learn more about customization
 After you customize you config you should migrate your database to add tokens table to your database using migration command
 ```
 php artisan migrate
 ```
 > Note that migration depends on some configuration in config file, so we encourage you to re-migrate database after you make changes in the config file.
 
-The models that use this auth should use the `HasMixAuth.php` trait in your model to add some helpful methods in your class
+The models that use this auth should use the `HasMixAuth.php` trai in your model to add some helpful methods in your class
 ```
 namespace App;
 
@@ -59,9 +59,9 @@ You can generate token for the user simply generate token of custom user or for 
 // for authenticated user 
 \App\User::generateTokenForAuth('guard-name');
 ```
-> Note that to use the guard you must specify it the config file so you can use it, by default the file contains only web guard, see user example in the file itself.
+> Note that to use the guard you must specify it the config file so you can use it, by default the file contains only web guard, see user example in the config file itself.
 
-> Note that the generate token methods will not generate sessions if you disable the key `token_sessions` in the config 
+> Note that the generate token methods will not generate sessions if you disable the key `token_sessions` in the config or it already generated.
 #### Auth middleware 
 You can simply set the middleware for the route using the route-middleware   
 ```php
@@ -74,7 +74,7 @@ You can delete user token by using the defined relations token in the trait
 ```php
 $user->tokens()->delete();
 ```
-or you can even delete all tokens for that user (other device tokens) by 
+or you can even delete all tokens for that user (including other devices' tokens) by 
 ```php
 $user->allTokens()->delete();
 ```
