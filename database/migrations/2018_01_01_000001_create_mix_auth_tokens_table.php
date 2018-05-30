@@ -32,6 +32,6 @@ class CreateMixAuthTokensTable extends Migration
      */
     public function down()
     {
-        Schema::drop('tokens');
+        Schema::drop('mix_auth_tokens');
     }
 }
