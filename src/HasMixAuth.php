@@ -70,7 +70,9 @@ trait HasMixAuth
         } catch (QueryException $ex) {
         }
 
-        header("Authorization: ".TokenGenerator::$token_64);
+        try{
+            header("Authorization: ".TokenGenerator::$token_64);
+        }catch (\ErrorException $ex){}
 
         return TokenGenerator::responseData();
     }
