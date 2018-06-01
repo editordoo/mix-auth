@@ -62,7 +62,7 @@ class Authenticate
      */
     private function getToken()
     {
-        if ($c = config('mix-auth.keys.query')) {
+        if ($c = config('mix-auth.keys.header')) {
             return request()->headers->get($c);
         }
         if ($c = config('mix-auth.keys.body')) {
