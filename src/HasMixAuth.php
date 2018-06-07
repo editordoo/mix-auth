@@ -2,6 +2,7 @@
 
 namespace Bnabriss\MixAuth;
 
+use Bnabriss\MixAuth\Exceptions\TokenGenerationException;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
@@ -26,23 +27,22 @@ trait HasMixAuth
     }
 
     /**
+     * Get first token of the access tokens for the user. using Token Data scope
+     *
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model
+     */
+    public function token()
+    {
+        return $this->hasOne(Token::class, 'user_id');
+    }
+    /**
      * Get all of the access tokens for the user. using Token Data scope
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model
      */
     public function tokens()
     {
-        return $this->hasMany(Token::class, 'user_id')->orderBy('expires_at', 'desc');
-    }
-
-    /**
-     * Get all of the access tokens for the user. without Token Data scope
-     *
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function allTokens()
-    {
-        return $this->hasMany(Token::class, 'user_id')->withoutTokenData()->orderBy('expires_at', 'desc');
+        return $this->hasMany(Token::class, 'user_id')->withoutPrefixScope();
     }
 
     /**
@@ -68,11 +68,12 @@ trait HasMixAuth
         try {
             $this->tokens()->save($tokenObj);
         } catch (QueryException $ex) {
+            throw new TokenGenerationException();
         }
 
         try{
             header("Authorization: ".TokenGenerator::$token_64);
-        }catch (\ErrorException $ex){}
+        }catch (\Exception $ex){}
 
         return TokenGenerator::responseData();
     }

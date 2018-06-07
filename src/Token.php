@@ -2,18 +2,26 @@
 
 namespace Bnabriss\MixAuth;
 
+use App\User;
+use Bnabriss\MixAuth\Exceptions\TokenExpiredException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property \App\User $user
+ * @property mixed     expires_at
+ * @property mixed     guard
+ * @property static    last_request
+ */
 class Token extends Model
 {
     /**
      * @static scope to use current data of input token
      */
-    const SPLITTER_GLOBAL_SCOPE = 'splitter_data';
+    const PREFIX_GLOBAL_SCOPE = 'splitter_data';
     /**
      * The table associated with the model.
      *
@@ -69,11 +77,14 @@ class Token extends Model
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope(self::SPLITTER_GLOBAL_SCOPE, function (Builder $builder) {
+        static::addGlobalScope('user_data', function (Builder $builder) {
             $builder->where([
                 'guard'   => TokenSplitter::$guard,
                 'user_id' => TokenSplitter::$user_id,
-            ])->whereRaw("BINARY `prefix`= ?", [TokenSplitter::$prefix])->orderBy('expires_at', 'desc');
+            ])->orderBy('expires_at', 'desc');
+        });
+        static::addGlobalScope(self::PREFIX_GLOBAL_SCOPE, function (Builder $builder) {
+            $builder->whereRaw("BINARY `prefix`= ?", [TokenSplitter::$prefix]);
         });
     }
 
@@ -84,9 +95,9 @@ class Token extends Model
      *
      * @return Builder
      */
-    public function scopeWithoutTokenData(Builder $query)
+    public function scopeWithoutPrefixScope(Builder $query)
     {
-        return $query->withoutGlobalScope(self::SPLITTER_GLOBAL_SCOPE);
+        return $query->withoutGlobalScope(self::PREFIX_GLOBAL_SCOPE);
     }
 
     /**
@@ -105,16 +116,18 @@ class Token extends Model
      * validate token expires_at and last_request time if enabled
      *
      * @return bool
+     * @throws TokenExpiredException
      */
     public function validateNotExpire()
     {
         $lastRequestStep = config('mix-auth.guards.'.$this->guard.'.last_request_step.check_after');
         if ($lastRequestStep > 0 && Carbon::now()->subSecond($lastRequestStep)->greaterThan($this->last_request)) {
-            return false; //expired
+            throw new TokenExpiredException();
         }
         if ($this->expires_at && Carbon::now()->greaterThan($this->expires_at)) {
-            return false; // not used for long time
+            throw new TokenExpiredException(); // not used for long time
         }
+        // check if should update last_request time
         $checkEvery = config('mix-auth.guards.'.$this->guard.'.last_request_step.check_every');
         if ($lastRequestStep > 0 && Carbon::now()->subSecond($checkEvery)->greaterThan($this->last_request)) {
             $this->last_request = Carbon::now();

@@ -8,27 +8,30 @@
 
 namespace Bnabriss\MixAuth;
 
-use Exception;
+use Bnabriss\MixAuth\Exceptions\TokenGenerationException;
+use Bnabriss\MixAuth\Exceptions\UnsupportedGuardException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class TokenGenerator extends TokenAbstract
 {
 
     /**
-     * Generate token if there is no token, els keep the last token
+     * Generate token if there is no token generated yet, else keep the last token
      *
      * @param string          $guard the guard
      * @param Authenticatable $user
      *
-     * @throws Exception|UnauthorizedHttpException
+     * @return array
+     * @throws TokenGenerationException
+     * @throws \ReflectionException
      */
     public static function generate($guard = null, $user = null)
     {
         if (empty(self::$token)) {
             self::update($guard, $user);
         }
+        return  (new \ReflectionClass(self::class))->getStaticProperties();
 
     }
 
@@ -38,13 +41,18 @@ class TokenGenerator extends TokenAbstract
      * @param string          $guard the guard
      * @param Authenticatable $user
      *
-     * @throws Exception|UnauthorizedHttpException
+     * @return array
+     * @throws TokenGenerationException
+     * @throws \ReflectionException
      */
     public static function update($guard = null, $user = null)
     {
         $guard = $guard ?: config('auth.defaults.guard');
+        if ( ! in_array($guard, array_keys(config('mix-auth.guards')), true)){
+            throw new UnsupportedGuardException();
+        }
         if (Auth::guard($guard)->guest() && is_null($user)) {
-            throw new Exception('It\'s not allowed for guest user to generate token');
+            throw new TokenGenerationException('It\'s not allowed for guest user to generate token');
         }
 
         $user = $user ?: Auth::guard(self::$guard)->user();
@@ -55,7 +63,7 @@ class TokenGenerator extends TokenAbstract
         self::$token_64 = self::base64_encode();
         self::$hashed_token = self::hash();
         self::$prefix = self::prefix();
-
+        return  (new \ReflectionClass(self::class))->getStaticProperties();
     }
 
     /**
