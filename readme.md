@@ -35,9 +35,9 @@ After you customize you config you should migrate your database to add tokens ta
 ```
 php artisan migrate
 ```
-> Note that migration depends on some configuration in config file, so we encourage you to re-migrate database after you make changes in the config file.
+> Note that migration depends on some configuration in config file, so we encourage you to re-migrate (refresh) database after you make changes in the config file.
 
-The models that use this auth should use the `HasMixAuth.php` trai in your model to add some helpful methods in your class
+The models that use this auth should use the `HasMixAuth.php` trait in your model to add some helpful methods in your model
 ```
 namespace App;
 
@@ -63,20 +63,21 @@ You can generate token for the user simply generate token of custom user or for 
 
 > Note that the generate token methods will not generate sessions if you disable the key `token_sessions` in the config or it already generated.
 #### Auth middleware 
-You can simply set the middleware for the route using the route-middleware   
+You can simply set the middleware for the route using the route-middleware, so the middleware will register the auth
+ if the token exist. if the token has invalid value or expired the middleware will throw an exception 
 ```php
 Route::get('/secure-page', function () {
-
+    return auth('guard-name')->check();
 })->middleware('mix.auth:guard-name');
 ```
 #### Delete token
 You can delete user token by using the defined relations token in the trait
 ```php
-$user->tokens()->delete();
+$user->token()->delete();
 ```
 or you can even delete all tokens for that user (including other devices' tokens) by 
 ```php
-$user->allTokens()->delete();
+$user->tokens()->delete();
 ```
 
 > You may need to disable api middleware `auth:api` if you need to use this vendor to api route 
