@@ -75,7 +75,7 @@ trait HasMixAuth
             header("Authorization: ".TokenGenerator::$token_64);
         }catch (\Exception $ex){}
 
-        return TokenGenerator::responseData();
+        return TokenGenerator::responseData()->merge(['expires_at' => (string)$tokenObj->expires_at]);
     }
 
 

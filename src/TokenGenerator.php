@@ -69,15 +69,15 @@ class TokenGenerator extends TokenAbstract
     /**
      * get some data to send it to send it via response
      *
-     * @return array
+     * @return array|\Illuminate\Support\Collection
      */
     public static function responseData()
     {
-        return [
+        return collect([
             'api_token' => self::$token_64,
             'guard'     => self::$guard,
             'user_id'   => self::$user_id,
-        ];
+        ]);
 
     }
 
