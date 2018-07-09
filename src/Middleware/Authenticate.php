@@ -47,7 +47,7 @@ class Authenticate
             throw new InvalidTokenException();
         }
 
-        if (config('token_sessions')) {
+        if (config('mix-auth.token_sessions')) {
             Auth::guard(TokenSplitter::$guard)->login($token->user);
         } else {
             Auth::guard(TokenSplitter::$guard)->setUser($token->user);
