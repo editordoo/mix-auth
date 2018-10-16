@@ -19,7 +19,7 @@ class MixAuthProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/mix-auth.php' => config_path('mix-auth.php'),
         ]);
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        //$this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
 
     }
